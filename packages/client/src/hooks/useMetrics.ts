@@ -8,10 +8,23 @@ import type {
   CountryDistribution,
 } from "@dashboard/shared";
 
+function useFilters() {
+  const dateFrom = useFilterStore((s) => s.dateFrom.toISOString().split("T")[0]);
+  const dateTo = useFilterStore((s) => s.dateTo.toISOString().split("T")[0]);
+  const plans = useFilterStore((s) => s.plans);
+  const countries = useFilterStore((s) => s.countries);
+  return {
+    dateFrom,
+    dateTo,
+    plans: plans.length ? plans : undefined,
+    countries: countries.length ? countries : undefined,
+  };
+}
+
 export function useOverviewMetrics() {
-  const filters = useFilterStore((s) => s.toParams());
+  const filters = useFilters();
   return useQuery({
-    queryKey: ["metrics", "overview", filters],
+    queryKey: ["metrics", "overview", filters.dateFrom, filters.dateTo, filters.plans, filters.countries],
     queryFn: () =>
       api.get<{ data: OverviewMetrics }>("/metrics/overview", filters as any).then((r) => r.data),
     staleTime: 30_000,
@@ -20,24 +33,21 @@ export function useOverviewMetrics() {
 }
 
 export function useRevenueTimeseries(months = 12) {
-  const filters = useFilterStore((s) => s.toParams());
+  const filters = useFilters();
   return useQuery({
-    queryKey: ["metrics", "revenue", months, filters],
+    queryKey: ["metrics", "revenue", months, filters.dateFrom, filters.dateTo],
     queryFn: () =>
       api
-        .get<{ data: RevenueTimeseries[] }>("/metrics/revenue/timeseries", {
-          months,
-          ...filters,
-        } as any)
+        .get<{ data: RevenueTimeseries[] }>("/metrics/revenue/timeseries", { months, ...filters } as any)
         .then((r) => r.data),
     staleTime: 60_000,
   });
 }
 
 export function usePlanDistribution() {
-  const filters = useFilterStore((s) => s.toParams());
+  const filters = useFilters();
   return useQuery({
-    queryKey: ["metrics", "plans", filters],
+    queryKey: ["metrics", "plans", filters.dateFrom, filters.dateTo],
     queryFn: () =>
       api
         .get<{ data: PlanDistribution[] }>("/metrics/distribution/plans", filters as any)
@@ -47,9 +57,9 @@ export function usePlanDistribution() {
 }
 
 export function useCountryDistribution() {
-  const filters = useFilterStore((s) => s.toParams());
+  const filters = useFilters();
   return useQuery({
-    queryKey: ["metrics", "countries", filters],
+    queryKey: ["metrics", "countries", filters.dateFrom, filters.dateTo],
     queryFn: () =>
       api
         .get<{ data: CountryDistribution[] }>("/metrics/distribution/countries", filters as any)

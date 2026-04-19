@@ -28,6 +28,18 @@ async function logAudit(
 }
 
 router.get(
+  "/roles",
+  requireAuth as any,
+  requirePermission("users:read") as any,
+  async (_req, res) => {
+    const result = await db
+      .select({ id: roles.id, name: roles.name })
+      .from(roles);
+    res.json({ data: result });
+  }
+);
+
+router.get(
   "/",
   requireAuth as any,
   requirePermission("users:read") as any,

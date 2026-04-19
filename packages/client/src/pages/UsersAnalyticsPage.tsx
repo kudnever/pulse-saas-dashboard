@@ -1,15 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { FilterBar } from "@/components/filters/FilterBar";
+import { CohortHeatmap } from "@/components/charts/CohortHeatmap";
 import { useCountryDistribution } from "@/hooks/useMetrics";
 import { formatNumber } from "@/lib/formatters";
 
-export const Route = createFileRoute("/dashboard/users")({
-  component: UsersAnalyticsPage,
-});
-
-function UsersAnalyticsPage() {
+export function UsersAnalyticsPage() {
   const { data: countries, isLoading } = useCountryDistribution();
 
   return (
@@ -17,34 +13,35 @@ function UsersAnalyticsPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header title="User Analytics" />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50 dark:bg-[#0b0f1a]">
           <FilterBar />
 
-          {/* Country distribution */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <CohortHeatmap />
+
+          <div className="card p-5">
+            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-wide mb-5">
               Geographic Distribution
             </h2>
             {isLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="animate-pulse h-8 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div key={i} className="h-8 skeleton" />
                 ))}
               </div>
             ) : (
               <div className="space-y-3">
                 {countries?.map((item) => (
                   <div key={item.country} className="flex items-center gap-4">
-                    <span className="w-8 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="w-8 text-sm font-medium text-slate-700 dark:text-slate-300">
                       {item.country}
                     </span>
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-3">
+                    <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                       <div
-                        className="bg-brand-500 rounded-full h-3 transition-all duration-500"
+                        className="bg-indigo-500 rounded-full h-2 transition-all duration-500"
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
-                    <span className="w-24 text-right text-sm text-gray-500">
+                    <span className="w-28 text-right text-xs text-slate-500 tabular-nums">
                       {formatNumber(item.count)} ({item.percentage}%)
                     </span>
                   </div>

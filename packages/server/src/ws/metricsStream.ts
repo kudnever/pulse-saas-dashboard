@@ -93,22 +93,22 @@ export function setupWebSocket(server: Server) {
     } catch {
       // ignore
     }
-  }, 5000);
+  }, 30000);
 
-  // Live data simulator (new events every 3-10 seconds)
+  // Live data simulator — disabled by default, enable via toggle
   let simulatorEnabled = false;
-  startSimulator();
 
   function startSimulator() {
-    const delay = 3000 + Math.random() * 7000;
+    const delay = 8000 + Math.random() * 12000; // slower: 8-20 seconds
     simulatorInterval = setTimeout(async () => {
-      if (simulatorEnabled || true) {
-        // Always simulate for demo purposes
+      if (simulatorEnabled) {
         await simulateEvent();
       }
       startSimulator();
     }, delay) as any;
   }
+
+  startSimulator();
 
   return {
     enableSimulator: () => {

@@ -1,106 +1,98 @@
-import { useEffect, useRef, useState } from "react";
 import type { KPIMetric } from "@dashboard/shared";
 import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-} from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler);
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface KPICardProps {
   title: string;
   metric: KPIMetric;
   format: (value: number) => string;
   isLoading?: boolean;
-  highlighted?: boolean;
+  compact?: boolean;
 }
 
-function useCountUp(target: number, duration = 1000) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    const start = Date.now();
-    const frame = () => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-      setValue(target * eased);
-      if (progress < 1) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  }, [target, duration]);
-  return value;
-}
-
-export function KPICard({ title, metric, format, isLoading, highlighted }: KPICardProps) {
-  const animatedValue = useCountUp(metric.current);
-  const isPositiveTrend = metric.trend === "up";
+export function KPICard({ title, metric, format, isLoading, compact = false }: KPICardProps) {
+  const up = metric.trend === "up";
+  const neutral = metric.trend === "neutral";
   const changeAbs = Math.abs(metric.change);
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-pulse">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-3" />
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2" />
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+      <div className={`card ${compact ? "p-3" : "p-5"}`}>
+        <div className="h-3 skeleton w-24 mb-3" />
+        <div className={`skeleton w-20 mb-2 ${compact ? "h-5" : "h-8"}`} />
+        {!compact && <div className="h-3 skeleton w-16" />}
+      </div>
+    );
+  }
+
+  const sparkColor = up ? "#16a34a" : neutral ? "#94a3b8" : "#dc2626";
+  const TrendIcon = neutral ? Minus : up ? TrendingUp : TrendingDown;
+  const deltaColor = neutral
+    ? "text-slate-400"
+    : up
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-red-600 dark:text-red-400";
+
+  if (compact) {
+    return (
+      <div className="card p-3">
+        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 leading-tight">
+          {title}
+        </p>
+        <p className="text-lg font-semibold text-slate-900 dark:text-slate-50 numeric tabular-nums leading-none mb-1.5">
+          {format(metric.current)}
+        </p>
+        <div className={`inline-flex items-center gap-0.5 text-[11px] font-medium ${deltaColor}`}>
+          <TrendIcon size={10} strokeWidth={2.5} />
+          <span>{changeAbs.toFixed(1)}%</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`bg-white dark:bg-gray-800 rounded-xl p-6 border transition-all duration-300 ${
-        highlighted
-          ? "border-brand-500 shadow-md shadow-brand-100 dark:shadow-brand-900/20"
-          : "border-gray-200 dark:border-gray-700"
-      }`}
-    >
-      <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-        {format(animatedValue)}
+    <div className="card p-5">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+        {title}
       </p>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-sm">
-          <span
-            className={`font-medium ${
-              isPositiveTrend ? "text-green-600 dark:text-green-400" : "text-red-500"
-            }`}
-          >
-            {isPositiveTrend ? "↑" : "↓"} {changeAbs.toFixed(1)}%
-          </span>
-          <span className="text-gray-400">vs last month</span>
+
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <p className="text-[28px] font-semibold text-slate-900 dark:text-slate-50 numeric tabular-nums leading-none mb-2">
+            {format(metric.current)}
+          </p>
+          <div className={`inline-flex items-center gap-1 text-xs font-medium ${deltaColor}`}>
+            <TrendIcon size={11} strokeWidth={2.5} />
+            <span>{changeAbs.toFixed(1)}%</span>
+            <span className="font-normal text-slate-400">vs last 30d</span>
+          </div>
         </div>
 
-        {/* Sparkline */}
-        <div className="w-20 h-8">
-          <Line
-            data={{
-              labels: metric.sparkline.map(() => ""),
-              datasets: [
-                {
+        {metric.sparkline.length > 0 && (
+          <div style={{ width: 72, height: 32 }} className="flex-shrink-0">
+            <Line
+              data={{
+                labels: metric.sparkline.map(() => ""),
+                datasets: [{
                   data: metric.sparkline,
-                  borderColor: isPositiveTrend ? "#22c55e" : "#ef4444",
+                  borderColor: sparkColor,
                   borderWidth: 1.5,
-                  fill: true,
-                  backgroundColor: isPositiveTrend ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                  fill: false,
                   tension: 0.4,
                   pointRadius: 0,
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false }, tooltip: { enabled: false } },
-              scales: { x: { display: false }, y: { display: false } },
-              animation: false,
-            }}
-          />
-        </div>
+                }],
+              }}
+              options={{
+                responsive: false,
+                animation: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: { x: { display: false }, y: { display: false } },
+              }}
+              width={72}
+              height={32}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

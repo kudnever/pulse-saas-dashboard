@@ -1,30 +1,28 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { usePermission } from "@/stores/authStore";
+import { usePermission, useAuthStore } from "@/stores/authStore";
+import {
+  LayoutDashboard, TrendingUp, Users, FileBarChart,
+  Settings, ShieldCheck, UserCog, LogOut, Zap,
+} from "lucide-react";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: string;
-  permission?: string;
-}
-
-const navItems: NavItem[] = [
-  { label: "Overview", href: "/dashboard", icon: "📊" },
-  { label: "Revenue", href: "/dashboard/revenue", icon: "💰", permission: "metrics:read" },
-  { label: "Users", href: "/dashboard/users", icon: "👥", permission: "metrics:read" },
-  { label: "Reports", href: "/dashboard/reports", icon: "📋", permission: "reports:read" },
-  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
+const navItems = [
+  { label: "Overview",  href: "/dashboard",          icon: LayoutDashboard },
+  { label: "Revenue",   href: "/dashboard/revenue",  icon: TrendingUp },
+  { label: "Users",     href: "/dashboard/users",    icon: Users },
+  { label: "Reports",   href: "/dashboard/reports",  icon: FileBarChart },
+  { label: "Settings",  href: "/dashboard/settings", icon: Settings },
 ];
 
-const adminItems: NavItem[] = [
-  { label: "Users", href: "/admin/users", icon: "🔑", permission: "users:read" },
-  { label: "Roles", href: "/admin/roles", icon: "🛡️", permission: "users:manage" },
+const adminItems = [
+  { label: "Users",  href: "/admin/users", icon: UserCog },
+  { label: "Roles",  href: "/admin/roles", icon: ShieldCheck },
 ];
 
 export function Sidebar() {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
-  const canManageUsers = usePermission("users:read");
+  const canViewAdmin = usePermission("users:read");
+  const { user, logout } = useAuthStore();
 
   function isActive(href: string) {
     return href === "/dashboard"
@@ -33,56 +31,80 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <aside className="w-60 flex-shrink-0 flex flex-col h-full bg-[#0d1117] border-r border-white/[0.06]">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-        <span className="text-xl font-bold text-brand-600 dark:text-brand-400">
-          📈 Analytica
-        </span>
+      <div className="px-5 h-16 flex items-center gap-2 border-b border-white/[0.06]">
+        <Zap size={15} className="text-slate-300" strokeWidth={2} />
+        <span className="text-[15px] font-semibold text-white tracking-tight">Pulse</span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-        <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-          Dashboard
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <p className="px-3 mb-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+          Workspace
         </p>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive(item.href)
-                ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-            }`}
-          >
-            <span>{item.icon}</span>
-            {item.label}
-          </Link>
-        ))}
 
-        {canManageUsers && (
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={`nav-item ${active ? "active" : ""}`}
+            >
+              <Icon size={16} strokeWidth={active ? 2.5 : 2} className="flex-shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+
+        {canViewAdmin && (
           <>
-            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2">
+            <p className="px-3 pt-5 pb-2 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Admin
             </p>
-            {adminItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                }`}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`nav-item ${active ? "active" : ""}`}
+                >
+                  <Icon size={16} strokeWidth={active ? 2.5 : 2} className="flex-shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </>
         )}
       </nav>
+
+      {/* User footer */}
+      <div className="px-3 py-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg group">
+          <div className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-medium text-slate-300">
+              {user?.fullName?.charAt(0).toUpperCase() ?? "U"}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-200 truncate leading-none mb-0.5">
+              {user?.fullName ?? "User"}
+            </p>
+            <p className="text-xs text-slate-500 capitalize truncate">{user?.role.name}</p>
+          </div>
+          <button
+            onClick={logout}
+            title="Logout"
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-400"
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 }
