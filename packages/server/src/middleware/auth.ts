@@ -53,6 +53,7 @@ export async function requireAuth(
 
     (req as AuthenticatedRequest).user = {
       ...user,
+      isActive: user.isActive ?? true,
       avatarUrl: user.avatarUrl ?? null,
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       createdAt: user.createdAt?.toISOString() ?? "",

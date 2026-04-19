@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
 import bcrypt from "bcryptjs";
-import { subDays, subMonths, addDays } from "date-fns";
 import "dotenv/config";
 import { db } from "./client";
 import {

@@ -61,7 +61,7 @@ router.get(
   requireAuth as any,
   requirePermission("reports:read") as any,
   async (req, res) => {
-    const { user } = req as AuthenticatedRequest;
+    const { user } = req as unknown as AuthenticatedRequest;
     const report = await db
       .select()
       .from(savedReports)
@@ -86,7 +86,7 @@ router.delete(
   requireAuth as any,
   requirePermission("reports:write") as any,
   async (req, res) => {
-    const { user } = req as AuthenticatedRequest;
+    const { user } = req as unknown as AuthenticatedRequest;
     const deleted = await db
       .delete(savedReports)
       .where(and(eq(savedReports.id, req.params.id), eq(savedReports.userId, user.id)))

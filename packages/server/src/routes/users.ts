@@ -72,7 +72,7 @@ router.patch(
   requirePermission("users:manage") as any,
   validate(updateRoleSchema) as any,
   async (req, res) => {
-    const { user } = req as AuthenticatedRequest;
+    const { user } = req as unknown as AuthenticatedRequest;
     const { roleId } = req.body;
 
     const [updated] = await db
@@ -96,7 +96,7 @@ router.patch(
   requireAuth as any,
   requirePermission("users:manage") as any,
   async (req, res) => {
-    const { user } = req as AuthenticatedRequest;
+    const { user } = req as unknown as AuthenticatedRequest;
     const { isActive } = req.body;
 
     const [updated] = await db
@@ -121,7 +121,7 @@ router.delete(
   requireAuth as any,
   requirePermission("users:manage") as any,
   async (req, res) => {
-    const { user } = req as AuthenticatedRequest;
+    const { user } = req as unknown as AuthenticatedRequest;
     if (req.params.id === user.id) {
       res.status(400).json({ error: "Cannot delete yourself" });
       return;
